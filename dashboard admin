@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Admin | Marketplace Pulsa</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    header {
+      background-color: #007bff;
+      color: white;
+      padding: 15px 20px;
+      text-align: center;
+      font-size: 1.3rem;
+      font-weight: bold;
+    }
+    main {
+      padding: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+      text-align: center;
+    }
+    th {
+      background-color: #f1f1f1;
+    }
+    button {
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      color: white;
+    }
+    .edit {
+      background-color: #28a745;
+    }
+    .delete {
+      background-color: #dc3545;
+    }
+    .add-btn {
+      background-color: #007bff;
+      padding: 10px 16px;
+      border-radius: 6px;
+      color: white;
+      margin-bottom: 15px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <header>Dashboard Admin Marketplace Pulsa</header>
+  <main>
+    <a href="#" class="add-btn">+ Tambah Produk</a>
+    <table>
+      <thead>
+        <tr>
+          <th>Nama Produk</th>
+          <th>Kode</th>
+          <th>Harga</th>
+          <th>Status</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Pulsa 10.000</td>
+          <td>PUL10</td>
+          <td>Rp 10.200</td>
+          <td>Aktif</td>
+          <td>
+            <button class="edit">Edit</button>
+            <button class="delete">Hapus</button>
+          </td>
+        </tr>
+        <tr>
+          <td>Pulsa 25.000</td>
+          <td>PUL25</td>
+          <td>Rp 25.300</td>
+          <td>Aktif</td>
+          <td>
+            <button class="edit">Edit</button>
+            <button class="delete">Hapus</button>
+          </td>
+        </tr>
+        <tr>
+          <td>Pulsa 50.000</td>
+          <td>PUL50</td>
+          <td>Rp 50.500</td>
+          <td>Aktif</td>
+          <td>
+            <button class="edit">Edit</button>
+            <button class="delete">Hapus</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </main>
+</body>
+</html>
