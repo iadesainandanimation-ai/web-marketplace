@@ -1,3 +1,27 @@
-document.querySelector("button").addEventListener("click", () => {
-  alert("Fitur pembelian akan segera tersedia!");
-});
+// ambil data dari MockAPI
+fetch("https://68f37e60fd14a9fcc428f201.mockapi.io/products")
+  .then(response => response.json())
+  .then(data => {
+    const container = document.querySelector("#product-list");
+    container.innerHTML = ""; // kosongin dulu
+
+    data.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "product";
+      card.innerHTML = `
+        <h3>${item.Name}</h3>
+        <p>Harga: Rp${item.Price}.000</p>
+        <p>Stok: ${item.Stock}</p>
+        <button>Beli Sekarang</button>
+      `;
+
+      card.querySelector("button").addEventListener("click", () => {
+        alert("Fitur pembelian akan segera tersedia!");
+      });
+
+      container.appendChild(card);
+    });
+  })
+  .catch(error => {
+    console.error("Gagal memuat data:", error);
+  });
