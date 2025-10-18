@@ -1,16 +1,16 @@
-// ambil data dari MockAPI
-fetch("https://68f37e60fd14a9fcc428f201.mockapi.io/products")
+// ambil data dari MockAPI lewat proxy biar nembus CORS
+fetch("https://corsproxy.io/?https://68f37e60fd14a9fcc428f201.mockapi.io/products")
   .then(response => response.json())
   .then(data => {
     const container = document.querySelector("#product-list");
-    container.innerHTML = ""; // kosongin dulu
+    container.innerHTML = "";
 
     data.forEach(item => {
       const card = document.createElement("div");
       card.className = "product";
       card.innerHTML = `
         <h3>${item.Name}</h3>
-        <p>Harga: Rp${item.Price}.000</p>
+        <p>Harga: Rp${item.Price}</p>
         <p>Stok: ${item.Stock}</p>
         <button>Beli Sekarang</button>
       `;
@@ -24,4 +24,6 @@ fetch("https://68f37e60fd14a9fcc428f201.mockapi.io/products")
   })
   .catch(error => {
     console.error("Gagal memuat data:", error);
+    document.querySelector("#product-list").innerHTML =
+      "<p style='color:red;'>Gagal memuat data produk.</p>";
   });
