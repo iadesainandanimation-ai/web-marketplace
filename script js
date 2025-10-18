@@ -1,6 +1,5 @@
-// ambil data dari MockAPI lewat proxy allorigins biar nembus CORS
-fetch("https://api.allorigins.win/raw?url=https://68f37e60fd14a9fcc428f201.mockapi.io/products")
-  .then(response => response.json())
+fetch("/api/mockapi")
+  .then(res => res.json())
   .then(data => {
     const container = document.querySelector("#product-list");
     container.innerHTML = "";
@@ -20,8 +19,8 @@ fetch("https://api.allorigins.win/raw?url=https://68f37e60fd14a9fcc428f201.mocka
       container.appendChild(card);
     });
   })
-  .catch(error => {
-    console.error("Gagal memuat data:", error);
+  .catch(err => {
+    console.error("Gagal memuat data:", err);
     document.querySelector("#product-list").innerHTML =
       "<p style='color:red;'>Gagal memuat data produk.</p>";
   });
