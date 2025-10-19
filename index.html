@@ -14,6 +14,28 @@
 <div id="product-list">
   <p>Memuat data produk...</p>
 </div>
+  <!-- Popup Form -->
+<div id="popup" class="popup">
+  <div class="popup-content">
+    <h2>Isi Data Pembelian</h2>
+    <form id="order-form">
+      <label>Nama:</label>
+      <input type="text" id="buyer-name" placeholder="Nama pembeli" required>
+
+      <label>Nomor HP:</label>
+      <input type="number" id="buyer-phone" placeholder="08xxxxxx" required>
+
+      <label>Produk:</label>
+      <input type="text" id="product-name" readonly>
+
+      <label>Catatan (opsional):</label>
+      <textarea id="buyer-note" placeholder="Pesan tambahan..."></textarea>
+
+      <button type="submit">Lanjut ke Pembayaran</button>
+      <button type="button" id="close-popup">Batal</button>
+    </form>
+  </div>
+</div>
   <script src="script.js"></script>
 </body>
 </html>
