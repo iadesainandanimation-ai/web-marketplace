@@ -58,55 +58,105 @@
       margin-bottom: 15px;
       display: inline-block;
     }
+    form {
+      margin-bottom: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    input {
+      padding: 8px;
+      margin: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body>
   <header>Dashboard Admin Marketplace Pulsa</header>
   <main>
-    <a href="#" class="add-btn">+ Tambah Produk</a>
+    <form id="add-product-form">
+      <input type="text" id="name" placeholder="Nama Produk" required />
+      <input type="number" id="price" placeholder="Harga" required />
+      <input type="number" id="stock" placeholder="Stok" required />
+      <button type="submit" class="add-btn">+ Tambah Produk</button>
+    </form>
+
     <table>
       <thead>
         <tr>
           <th>Nama Produk</th>
-          <th>Kode</th>
           <th>Harga</th>
-          <th>Status</th>
+          <th>Stok</th>
           <th>Aksi</th>
         </tr>
       </thead>
-      <tbody>
-        <tr>
-          <td>Pulsa 10.000</td>
-          <td>PUL10</td>
-          <td>Rp 10.200</td>
-          <td>Aktif</td>
-          <td>
-            <button class="edit">Edit</button>
-            <button class="delete">Hapus</button>
-          </td>
-        </tr>
-        <tr>
-          <td>Pulsa 25.000</td>
-          <td>PUL25</td>
-          <td>Rp 25.300</td>
-          <td>Aktif</td>
-          <td>
-            <button class="edit">Edit</button>
-            <button class="delete">Hapus</button>
-          </td>
-        </tr>
-        <tr>
-          <td>Pulsa 50.000</td>
-          <td>PUL50</td>
-          <td>Rp 50.500</td>
-          <td>Aktif</td>
-          <td>
-            <button class="edit">Edit</button>
-            <button class="delete">Hapus</button>
-          </td>
-        </tr>
+      <tbody id="product-list">
+        <tr><td colspan="4">Memuat data produk...</td></tr>
       </tbody>
     </table>
   </main>
+
+  <script>
+    const API_URL = "https://68f37e60fd14a9fcc428f201.mockapi.io/products";
+
+    function loadProducts() {
+      fetch(API_URL)
+        .then(res => res.json())
+        .then(data => {
+          const list = document.querySelector("#product-list");
+          list.innerHTML = "";
+          data.forEach(item => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${item.Name}</td>
+              <td>Rp ${item.Price}</td>
+              <td>${item.Stock}</td>
+              <td>
+                <button class="delete" onclick="deleteProduct('${item.id}')">Hapus</button>
+              </td>
+            `;
+            list.appendChild(row);
+          });
+        })
+        .catch(err => {
+          console.error("Gagal ambil data:", err);
+          document.querySelector("#product-list").innerHTML =
+            "<tr><td colspan='4' style='color:red;'>Gagal memuat data.</td></tr>";
+        });
+    }
+
+    document.querySelector("#add-product-form").addEventListener("submit", e => {
+      e.preventDefault();
+      const name = document.querySelector("#name").value;
+      const price = document.querySelector("#price").value;
+      const stock = document.querySelector("#stock").value;
+
+      fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ Name: name, Price: price, Stock: stock })
+      })
+        .then(res => res.json())
+        .then(() => {
+          alert("Produk berhasil ditambahkan!");
+          loadProducts();
+          e.target.reset();
+        })
+        .catch(err => console.error("Gagal tambah produk:", err));
+    });
+
+    function deleteProduct(id) {
+      fetch(`${API_URL}/${id}`, { method: "DELETE" })
+        .then(() => {
+          alert("Produk dihapus!");
+          loadProducts();
+        })
+        .catch(err => console.error("Gagal hapus produk:", err));
+    }
+
+    loadProducts();
+  </script>
 </body>
 </html>
