@@ -24,3 +24,26 @@ fetch("/api/mockapi")
     document.querySelector("#product-list").innerHTML =
       "<p style='color:red;'>Gagal memuat data produk.</p>";
   });
+const popup = document.getElementById("popup");
+const closePopup = document.getElementById("close-popup");
+const productInput = document.getElementById("product-name");
+const orderForm = document.getElementById("order-form");
+
+closePopup.addEventListener("click", () => {
+  popup.style.display = "none";
+});
+
+orderForm.addEventListener("submit", e => {
+  e.preventDefault();
+  alert("Data berhasil dikirim! (nanti diarahkan ke Tripay)");
+  popup.style.display = "none";
+});
+
+// munculkan popup ketika klik “Beli Sekarang”
+document.addEventListener("click", e => {
+  if (e.target.tagName === "BUTTON" && e.target.textContent === "Beli Sekarang") {
+    const productName = e.target.parentElement.querySelector("h3").textContent;
+    productInput.value = productName;
+    popup.style.display = "flex";
+  }
+});
