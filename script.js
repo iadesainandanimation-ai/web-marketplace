@@ -14,7 +14,7 @@ fetch("/api/mockapi")
         <button>Beli Sekarang</button>
       `;
       card.querySelector("button").addEventListener("click", () => {
-        alert("Fitur pembelian akan segera tersedia!");
+        openPurchaseForm(item); // ganti dengan fungsi buka form pembelian
       });
       container.appendChild(card);
     });
