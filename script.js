@@ -62,3 +62,28 @@ bayarButton.addEventListener('click', (e) => {
 closeQris.addEventListener('click', () => {
   qrisPopup.style.display = 'none';
 });
+document.addEventListener("DOMContentLoaded", function() {
+  const form = document.querySelector("#popup form");
+  const popup = document.getElementById("popup");
+  const qrisPopup = document.getElementById("popup-qris");
+  const closePopup = document.getElementById("close-popup");
+  const tutupQris = document.getElementById("tutup-qris");
+
+  // Saat form disubmit
+  form.addEventListener("submit", function(e) {
+    e.preventDefault();
+    alert("Silakan bayar lewat QRIS sesuai nominal.");
+    popup.style.display = "none"; // Tutup popup form
+    qrisPopup.style.display = "flex"; // Tampilkan popup QRIS
+  });
+
+  // Tombol batal popup form
+  closePopup.addEventListener("click", function() {
+    popup.style.display = "none";
+  });
+
+  // Tombol tutup QRIS
+  tutupQris.addEventListener("click", function() {
+    qrisPopup.style.display = "none";
+  });
+});
