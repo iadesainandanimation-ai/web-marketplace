@@ -47,3 +47,18 @@ document.addEventListener("click", e => {
     popup.style.display = "flex";
   }
 });
+// Tangani klik tombol Lanjut ke Pembayaran
+const bayarButton = document.querySelector('button[type="submit"]');
+const qrisPopup = document.getElementById('qris-popup');
+const closeQris = document.getElementById('close-qris');
+
+bayarButton.addEventListener('click', (e) => {
+  e.preventDefault(); // biar gak reload halaman
+  alert('Pesanan telah diproses. Silakan lakukan pembayaran melalui QRIS.');
+  qrisPopup.style.display = 'block'; // munculin QRIS
+});
+
+// Tombol tutup QRIS
+closeQris.addEventListener('click', () => {
+  qrisPopup.style.display = 'none';
+});
