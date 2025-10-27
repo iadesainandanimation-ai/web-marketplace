@@ -16,38 +16,38 @@
   </div>
 
   <!-- Popup Form -->
-  <div id="popup" class="popup">
-    <div class="popup-content">
-      <h2>Isi Data Pembelian</h2>
-      <form id="order-form">
-        <label>Nama:</label>
-        <input type="text" id="buyer-name" placeholder="Nama pembeli" required>
+<div id="popup" class="popup" style="display:none;">
+  <div class="popup-content">
+    <h2>Isi Data Pembelian</h2>
+    <form id="order-form">
+      <label>Nama:</label>
+      <input type="text" id="buyer-name" placeholder="Nama pembeli" required>
 
-        <label>Nomor HP:</label>
-        <input type="number" id="buyer-phone" placeholder="08xxxxxx" required>
+      <label>Nomor HP:</label>
+      <input type="number" id="buyer-phone" placeholder="08xxxxxx" required>
 
-        <label>Produk:</label>
-        <input type="text" id="product-name" readonly>
+      <label>Produk:</label>
+      <input type="text" id="product-name" readonly>
 
-        <label>Catatan (opsional):</label>
-        <textarea id="buyer-note" placeholder="Pesan tambahan..."></textarea>
+      <label>Catatan (opsional):</label>
+      <textarea id="buyer-note" placeholder="Pesan tambahan..."></textarea>
 
-        <button type="submit">Lanjut ke Pembayaran</button>
-        <button type="button" id="close-popup">Batal</button>
-      </form>
-    </div>
+      <button type="submit">Lanjut ke Pembayaran</button>
+      <button type="button" id="close-popup">Batal</button>
+    </form>
   </div>
+</div>
 
-  <!-- Popup QRIS -->
-  <div id="popup-qris" class="popup" style="display:none;">
-    <div class="popup-content">
-      <span id="close-qris" class="close-btn">&times;</span>
-      <h2>Silakan Scan QRIS untuk Pembayaran</h2>
-      <img src="image/IMG-20251025-WA0000.jpg" alt="QRIS" style="width:220px; margin:15px 0;">
-      <p>Setelah membayar, kirim bukti pembayaran di bawah ini:</p>
-      <input type="file" id="bukti-transfer" accept="image/*"><br><br>
-    </div>
+<!-- Popup QRIS -->
+<div id="popup-qris" class="popup" style="display:none;">
+  <div class="popup-content">
+    <span id="close-qris" class="close-btn">&times;</span>
+    <h2>Silakan Scan QRIS untuk Pembayaran</h2>
+    <img src="image/IMG-20251025-WA0000.jpg" alt="QRIS" style="width:220px; margin:15px 0;">
+    <p>Setelah membayar, kirim bukti pembayaran di bawah ini:</p>
+    <input type="file" id="bukti-transfer" accept="image/*"><br><br>
   </div>
+</div>
 
   <script src="script.js"></script>
 </body>
