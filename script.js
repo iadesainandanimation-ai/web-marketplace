@@ -77,3 +77,25 @@ document.addEventListener("DOMContentLoaded", function() {
     qrisPopup.style.display = "none";
   });
 });
+document.addEventListener("DOMContentLoaded", function() {
+  const form = document.querySelector("#popup form");
+  const popup = document.getElementById("popup");
+  const qrisPopup = document.getElementById("popup-qris");
+  const closePopup = document.getElementById("close-popup");
+  const closeQris = document.getElementById("close-qris");
+
+  form.addEventListener("submit", function(e) {
+    e.preventDefault();
+    alert("Silakan bayar lewat QRIS sesuai nominal.");
+    popup.style.display = "none";
+    qrisPopup.style.display = "flex";
+  });
+
+  closePopup.addEventListener("click", function() {
+    popup.style.display = "none";
+  });
+
+  closeQris.addEventListener("click", function() {
+    qrisPopup.style.display = "none";
+  });
+});
