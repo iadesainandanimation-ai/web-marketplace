@@ -2,6 +2,8 @@ export default async function handler(req, res) {
   try {
     const url = process.env.MOCKAPI_URL; // ambil dari Environment Variable
 
+   console.log("🔐 API dari ENV:", !!process.env.MOCKAPI_URL);
+    
     const response = await fetch(url);
     if (!response.ok) throw new Error("Gagal ambil data dari MockAPI");
 
