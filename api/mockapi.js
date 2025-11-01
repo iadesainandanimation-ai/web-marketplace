@@ -1,14 +1,15 @@
 export default async function handler(req, res) {
   try {
-    // ganti URL di bawah ini sesuai MockAPI kamu
-    const response = await fetch("https://68f37e60fd14a9fcc428f201.mockapi.io/products");
-    if (!response.ok) throw new Error("MockAPI response error");
+    const url = process.env.MOCKAPI_URL; // ambil dari Environment Variable
+
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Gagal ambil data dari MockAPI");
 
     const data = await response.json();
     res.status(200).json(data);
   } catch (err) {
     res.status(500).json({
-      error: "Gagal mengambil data",
+      error: "Gagal memuat data produk",
       detail: err.message
     });
   }
