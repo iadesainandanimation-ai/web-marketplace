@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
   try {
     // ganti URL di bawah ini sesuai MockAPI kamu
-    const response = await fetch("https://68f37e06fd1a49fccc428f201.mockapi.io/products");
+    const response = await fetch("https://68f37e60fd14a9fcc428f201.mockapi.io/products");
     if (!response.ok) throw new Error("MockAPI response error");
 
     const data = await response.json();
