@@ -16,17 +16,18 @@ const db = getFirestore(app);
 export default async function handler(req, res) {
   if (req.method === "POST") {
     try {
-      const { nama, noHp, produk } = req.body;
+      const { name, phone, product, note } = req.body;
 
-      // Simpan ke Firestore
-      await addDoc(collection(db, "orders"), {
-        nama,
-        noHp,
-        produk,
-        status: "Pending",
-        tanggal: new Date().toISOString(),
-        dibuat: serverTimestamp()
-      });
+// Simpan ke Firestore
+await addDoc(collection(db, "orders"), {
+  name,
+  phone,
+  product,
+  note,
+  status: "Pending",
+  tanggal: new Date().toISOString(),
+  dibuat: serverTimestamp()
+});
 
       res.status(200).json({ success: true, message: "Order berhasil disimpan" });
     } catch (error) {
