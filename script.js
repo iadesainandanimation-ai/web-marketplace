@@ -41,11 +41,32 @@ document.addEventListener("DOMContentLoaded", function() {
   const closeQris = document.getElementById("close-qris");
 
   // Saat form disubmit
-  form.addEventListener("submit", function(e) {
+  form.addEventListener("submit", async function(e) {
     e.preventDefault();
-    alert("Silakan bayar lewat QRIS sesuai nominal.");
+
+    const name = document.getElementById("buyer-name").value;
+    const phone = document.getElementById("buyer-phone").value;
+    const product = document.getElementById("product-name").value;
+    const note = document.getElementById("buyer-note").value;
+
+    // kirim data ke backend
+    const response = await fetch("/api/order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, phone, product, note })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      alert("Pesanan berhasil dikirim ke Firebase!");
+    } else {
+      alert("Gagal mengirim pesanan: " + result.error);
+    }
+
+    // tetap tampilkan popup QRIS
     popup.style.display = "none";
-    qrisPopup.style.display = "flex"; // langsung munculkan QRIS popup
+    qrisPopup.style.display = "flex";
   });
 
   // Tombol Batal di form
