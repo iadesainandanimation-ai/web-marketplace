@@ -1,40 +1,40 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import admin from "firebase-admin";
 
-const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY,
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.FIREBASE_APP_ID
-};
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_ADMIN_KEY)),
+  });
+}
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const db = admin.firestore();
 
 export default async function handler(req, res) {
   if (req.method === "POST") {
     try {
       const { name, phone, product, note } = req.body;
 
-// Simpan ke Firestore
-await addDoc(collection(db, "orders"), {
-  name,
-  phone,
-  product,
-  note,
-  status: "Pending",
-  tanggal: new Date().toISOString(),
-  dibuat: serverTimestamp()
-});
+      await db.collection("orders").add({
+        name,
+        phone,
+        product,
+        note,
+        status: "Pending",
+        tanggal: new Date().toISOString(),
+        dibuat: admin.firestore.FieldValue.serverTimestamp(),
+      });
 
-      res.status(200).json({ success: true, message: "Order berhasil disimpan" });
+      res.status(200).json({
+        success: true,
+        message: "Order berhasil disimpan"
+      });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ success: false, message: "Gagal menyimpan order" });
+      res.status(500).json({
+        success: false,
+        message: "Gagal menyimpan order"
+      });
     }
   } else {
-    res.status(405).json({ message: "Metode tidak diizinkan" });
+    res.status(405).json({ message: "Method tidak diizinkan" });
   }
 }
