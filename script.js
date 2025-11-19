@@ -61,9 +61,8 @@ document.addEventListener("DOMContentLoaded", function() {
     if (!result.success) {
   alert("Gagal mengirim pesanan: " + result.error);
 }
-    } else {
-      alert("Gagal mengirim pesanan: " + result.error);
-    }
+
+// kalau sukses, TIDAK ADA alert apa-apa
 
     // tetap tampilkan popup QRIS
     popup.style.display = "none";
