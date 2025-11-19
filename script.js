@@ -58,8 +58,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const result = await response.json();
 
-    if (result.success) {
-      alert("Pesanan berhasil dikirim ke Firebase!");
+    if (!result.success) {
+  alert("Gagal mengirim pesanan: " + result.error);
+}
     } else {
       alert("Gagal mengirim pesanan: " + result.error);
     }
