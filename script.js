@@ -79,3 +79,43 @@ document.addEventListener("DOMContentLoaded", function() {
     qrisPopup.style.display = "none";
   });
 });
+// === Kirim Bukti Pembayaran ===
+
+// Ambil elemen
+const buktiInput = document.getElementById("bukti-transfer");
+const sendProofBtn = document.getElementById("send-proof");
+const popupSuccess = document.getElementById("popup-success");
+const closeSuccess = document.getElementById("close-success");
+
+// tombol kirim bukti
+sendProofBtn.addEventListener("click", async () => {
+
+    if (!buktiInput.files[0]) {
+        alert("Silahkan upload bukti pembayaran dulu");
+        return;
+    }
+
+    // upload file ke Firebase Storage
+    const file = buktiInput.files[0];
+    const storageRef = firebase.storage().ref("bukti/" + Date.now() + "_" + file.name);
+
+    await storageRef.put(file);
+
+    // ambil downloadable url
+    const url = await storageRef.getDownloadURL();
+
+    // simpan data ke Firestore agar admin bisa lihat
+    await firebase.firestore().collection("buktiPembayaran").add({
+        url: url,
+        waktu: new Date()
+    });
+
+    // tampilkan popup sukses
+    document.getElementById("popup-qris").style.display = "none";
+    popupSuccess.style.display = "flex";
+});
+
+// tombol close popup sukses
+closeSuccess.addEventListener("click", () => {
+    popupSuccess.style.display = "none";
+});
