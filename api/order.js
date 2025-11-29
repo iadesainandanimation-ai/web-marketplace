@@ -13,6 +13,7 @@ export default async function handler(req, res) {
     try {
       const { name, phone, product, note } = req.body;
 
+      // Simpan ke Firestore
       await db.collection("orders").add({
         name,
         phone,
@@ -23,18 +24,43 @@ export default async function handler(req, res) {
         dibuat: admin.firestore.FieldValue.serverTimestamp(),
       });
 
-      res.status(200).json({
-        success: true,
-        message: "Order berhasil disimpan"
+      // ===== Kirim ke Telegram =====
+      const message = `
+🛒 *Order Baru Masuk*
+Nama: ${name}
+No HP: ${phone}
+Produk: ${product}
+Catatan: ${note || "-"}
+Tanggal: ${new Date().toLocaleString("id-ID")}
+      `;
+
+      await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          chat_id: process.env.TELEGRAM_CHAT_ID,
+          text: message,
+          parse_mode: "Markdown",
+        }),
       });
+
+      // Respon sukses
+      return res.status(200).json({
+        success: true,
+        message: "Order berhasil disimpan dan dikirim ke Telegram",
+      });
+
     } catch (error) {
-      console.error(error);
-      res.status(500).json({
+      console.error("ERROR:", error);
+      return res.status(500).json({
         success: false,
-        message: "Gagal menyimpan order"
+        message: "Gagal menyimpan order",
       });
     }
-  } else {
-    res.status(405).json({ message: "Method tidak diizinkan" });
   }
+
+  // Jika method selain POST
+  return res.status(405).json({ message: "Method tidak diizinkan" });
 }
