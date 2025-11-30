@@ -110,9 +110,16 @@ sendProofBtn.addEventListener("click", async () => {
         waktu: new Date()
     });
 
-    // tampilkan popup sukses
-    document.getElementById("popup-qris").style.display = "none";
-    popupSuccess.style.display = "flex";
+    // Kirim link foto ke backend untuk dikirim ke Telegram
+await fetch("/api/upload-bukti", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ url })
+});
+
+// sukses
+document.getElementById("popup-qris").style.display = "none";
+popupSuccess.style.display = "flex";
 });
 
 // tombol close popup sukses
