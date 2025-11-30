@@ -40,7 +40,6 @@ document.addEventListener("DOMContentLoaded", function() {
   const closePopup = document.getElementById("close-popup");
   const closeQris = document.getElementById("close-qris");
 
-  // Saat form disubmit
   form.addEventListener("submit", async function(e) {
     e.preventDefault();
 
@@ -49,7 +48,6 @@ document.addEventListener("DOMContentLoaded", function() {
     const product = document.getElementById("product-name").value;
     const note = document.getElementById("buyer-note").value;
 
-    // kirim data ke backend
     const response = await fetch("/api/order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -59,70 +57,61 @@ document.addEventListener("DOMContentLoaded", function() {
     const result = await response.json();
 
     if (!result.success) {
-  alert("Gagal mengirim pesanan: " + result.error);
-}
+      alert("Gagal mengirim pesanan: " + result.error);
+    }
 
-// kalau sukses, TIDAK ADA alert apa-apa
-
-    // tetap tampilkan popup QRIS
     popup.style.display = "none";
     qrisPopup.style.display = "flex";
   });
 
-  // Tombol Batal di form
   closePopup.addEventListener("click", function() {
     popup.style.display = "none";
   });
 
-  // Tombol Tutup di QRIS
   closeQris.addEventListener("click", function() {
     qrisPopup.style.display = "none";
   });
 });
+
+// === Upload Bukti Pembayaran ===
 document.addEventListener("DOMContentLoaded", () => {
-  
+
   console.log("JS READY");
-console.log("buktiInput:", document.getElementById("bukti-transfer"));
-console.log("sendProofBtn:", document.getElementById("send-proof"));
-console.log("popupSuccess:", document.getElementById("popup-success"));
-  
-    const buktiInput = document.getElementById("bukti-transfer");
-    const sendProofBtn = document.getElementById("send-proof");
-    const popupSuccess = document.getElementById("popup-success");
+  console.log("buktiInput:", document.getElementById("bukti-transfer"));
+  console.log("sendProofBtn:", document.getElementById("send-proof"));
+  console.log("popupSuccess:", document.getElementById("popup-success"));
 
-    console.log("buktiInput:", buktiInput);
-    console.log("sendProofBtn:", sendProofBtn);
-    console.log("popupSuccess:", popupSuccess);
+  const buktiInput = document.getElementById("bukti-transfer");
+  const sendProofBtn = document.getElementById("send-proof");
+  const popupSuccess = document.getElementById("popup-success");
 
-    sendProofBtn.addEventListener("click", async () => {
-        console.log("Tombol Kirim Bukti diklik");
+  sendProofBtn.addEventListener("click", async () => {
+    console.log("Tombol Kirim Bukti diklik");
 
-        if (!buktiInput.files[0]) {
-            alert("Silahkan upload bukti pembayaran dulu");
-            return;
-        }
+    if (!buktiInput.files[0]) {
+      alert("Silahkan upload bukti pembayaran dulu");
+      return;
+    }
 
-        const file = buktiInput.files[0];
-        const storageRef = firebase.storage().ref("bukti/" + Date.now() + "_" + file.name);
-        await storageRef.put(file);
-        const url = await storageRef.getDownloadURL();
+    const file = buktiInput.files[0];
+    const storageRef = firebase.storage().ref("bukti/" + Date.now() + "_" + file.name);
+    await storageRef.put(file);
+    const url = await storageRef.getDownloadURL();
 
-        console.log("URL bukti:", url);
+    console.log("URL bukti:", url);
 
-        // Simpan di Firestore
-        await firebase.firestore().collection("buktiPembayaran").add({
-            url: url,
-            waktu: new Date()
-        });
-
-        // Kirim ke backend
-        await fetch("/api/upload-bukti", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url })
-        });
-
-        document.getElementById("popup-qris").style.display = "none";
-        popupSuccess.style.display = "flex";
+    await firebase.firestore().collection("buktiPembayaran").add({
+      url: url,
+      waktu: new Date()
     });
+
+    await fetch("/api/upload-bukti", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url })
+    });
+
+    document.getElementById("popup-qris").style.display = "none";
+    popupSuccess.style.display = "flex";
+  });
 });
