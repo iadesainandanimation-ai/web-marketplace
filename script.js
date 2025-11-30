@@ -120,18 +120,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     console.log("Mulai upload:", fileName);
 
-    // Upload ke Firebase
-    const storageRef = firebase.storage().ref("bukti/" + fileName);
-    await storageRef.put(file);
-    const url = await storageRef.getDownloadURL();
+    // Kirim file langsung ke API Vercel
+const formData = new FormData();
+formData.append("file", file);
 
-    console.log("URL hasil upload:", url);
+const res = await fetch("/api/upload-bukti", {
+  method: "POST",
+  body: formData,
+});
 
-    // Simpan ke Firestore
-    await firebase.firestore().collection("buktiPembayaran").add({
-      url: url,
-      waktu: new Date()
-    });
+const result = await res.json();
+console.log(result);
 
     // Ping API → kirim ke Telegram
     await fetch("/api/upload-bukti", {
