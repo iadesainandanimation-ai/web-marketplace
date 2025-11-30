@@ -1,4 +1,6 @@
-// === Ambil data produk ===
+// ======================
+// AMBIL DATA PRODUK
+// ======================
 fetch("/api/mockapi")
   .then(res => res.json())
   .then(data => {
@@ -8,12 +10,14 @@ fetch("/api/mockapi")
     data.forEach(item => {
       const card = document.createElement("div");
       card.className = "product";
+
       card.innerHTML = `
         <h3>${item.Name}</h3>
         <p>Harga: Rp${item.Price}</p>
         <p>Stok: ${item.Stock}</p>
         <button>Beli Sekarang</button>
       `;
+
       card.querySelector("button").addEventListener("click", () => openPurchaseForm(item));
       container.appendChild(card);
     });
@@ -24,94 +28,122 @@ fetch("/api/mockapi")
       "<p style='color:red;'>Gagal memuat data produk.</p>";
   });
 
-// === Fungsi Buka Form ===
+
+// ======================
+// FORM BELI
+// ======================
 function openPurchaseForm(item) {
-  const popup = document.getElementById("popup");
-  const productInput = document.getElementById("product-name");
-  productInput.value = item.Name;
-  popup.style.display = "flex";
+  document.getElementById("product-name").value = item.Name;
+  document.getElementById("popup").style.display = "flex";
 }
 
-// === Pop-up Form & QRIS ===
-document.addEventListener("DOMContentLoaded", function() {
-  const form = document.querySelector("#popup form");
+
+
+// ========================
+// SEMUA EVENT LISTENER DISINI
+// ========================
+document.addEventListener("DOMContentLoaded", () => {
+
+  console.log("JS READY (ALL LISTENER ACTIVE)");
+
+  // Element penting
   const popup = document.getElementById("popup");
   const qrisPopup = document.getElementById("popup-qris");
-  const closePopup = document.getElementById("close-popup");
-  const closeQris = document.getElementById("close-qris");
+  const popupSuccess = document.getElementById("popup-success");
 
-  form.addEventListener("submit", async function(e) {
+  const form = document.querySelector("#popup form");
+  const buktiInput = document.getElementById("bukti-transfer");
+  const sendProofBtn = document.getElementById("send-proof");
+
+  // Close buttons
+  document.getElementById("close-popup").addEventListener("click", () => {
+    popup.style.display = "none";
+  });
+
+  document.getElementById("close-qris").addEventListener("click", () => {
+    qrisPopup.style.display = "none";
+  });
+
+  document.getElementById("close-success").addEventListener("click", () => {
+    popupSuccess.style.display = "none";
+  });
+
+
+
+  // ======================
+  // SUBMIT FORM (ISI DATA)
+  // ======================
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
+
+    console.log("Form pembelian disubmit!");
 
     const name = document.getElementById("buyer-name").value;
     const phone = document.getElementById("buyer-phone").value;
     const product = document.getElementById("product-name").value;
     const note = document.getElementById("buyer-note").value;
 
-    const response = await fetch("/api/order", {
+    const res = await fetch("/api/order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, phone, product, note })
     });
 
-    const result = await response.json();
+    const result = await res.json();
 
     if (!result.success) {
       alert("Gagal mengirim pesanan: " + result.error);
+      return;
     }
 
     popup.style.display = "none";
     qrisPopup.style.display = "flex";
   });
 
-  closePopup.addEventListener("click", function() {
-    popup.style.display = "none";
-  });
 
-  closeQris.addEventListener("click", function() {
-    qrisPopup.style.display = "none";
-  });
-});
 
-// === Upload Bukti Pembayaran ===
-document.addEventListener("DOMContentLoaded", () => {
-
-  console.log("JS READY");
-  console.log("buktiInput:", document.getElementById("bukti-transfer"));
-  console.log("sendProofBtn:", document.getElementById("send-proof"));
-  console.log("popupSuccess:", document.getElementById("popup-success"));
-
-  const buktiInput = document.getElementById("bukti-transfer");
-  const sendProofBtn = document.getElementById("send-proof");
-  const popupSuccess = document.getElementById("popup-success");
-
+  // ======================
+  // UPLOAD BUKTI BAYAR
+  // ======================
   sendProofBtn.addEventListener("click", async () => {
-    console.log("Tombol Kirim Bukti diklik");
 
+    console.log("Tombol KIRIM BUKTI diklik");
+
+    // Cek file
     if (!buktiInput.files[0]) {
       alert("Silahkan upload bukti pembayaran dulu");
       return;
     }
 
     const file = buktiInput.files[0];
-    const storageRef = firebase.storage().ref("bukti/" + Date.now() + "_" + file.name);
+    const fileName = Date.now() + "_" + file.name;
+
+    console.log("Mulai upload:", fileName);
+
+    // Upload ke Firebase
+    const storageRef = firebase.storage().ref("bukti/" + fileName);
     await storageRef.put(file);
     const url = await storageRef.getDownloadURL();
 
-    console.log("URL bukti:", url);
+    console.log("URL hasil upload:", url);
 
+    // Simpan ke Firestore
     await firebase.firestore().collection("buktiPembayaran").add({
       url: url,
       waktu: new Date()
     });
 
+    // Ping API → kirim ke Telegram
     await fetch("/api/upload-bukti", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url })
     });
 
-    document.getElementById("popup-qris").style.display = "none";
+    // Tampilkan popup sukses
+    qrisPopup.style.display = "none";
     popupSuccess.style.display = "flex";
+
   });
+
 });
