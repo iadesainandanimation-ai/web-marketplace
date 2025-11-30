@@ -84,7 +84,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const sendProofBtn = document.getElementById("send-proof");
     const popupSuccess = document.getElementById("popup-success");
 
+    console.log("buktiInput:", buktiInput);
+    console.log("sendProofBtn:", sendProofBtn);
+    console.log("popupSuccess:", popupSuccess);
+
     sendProofBtn.addEventListener("click", async () => {
+        console.log("Tombol Kirim Bukti diklik");
+
         if (!buktiInput.files[0]) {
             alert("Silahkan upload bukti pembayaran dulu");
             return;
@@ -94,6 +100,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const storageRef = firebase.storage().ref("bukti/" + Date.now() + "_" + file.name);
         await storageRef.put(file);
         const url = await storageRef.getDownloadURL();
+
+        console.log("URL bukti:", url);
 
         // Simpan di Firestore
         await firebase.firestore().collection("buktiPembayaran").add({
