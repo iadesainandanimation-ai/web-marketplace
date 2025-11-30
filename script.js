@@ -79,50 +79,36 @@ document.addEventListener("DOMContentLoaded", function() {
     qrisPopup.style.display = "none";
   });
 });
-// === Kirim Bukti Pembayaran ===
+document.addEventListener("DOMContentLoaded", () => {
+    const buktiInput = document.getElementById("bukti-transfer");
+    const sendProofBtn = document.getElementById("send-proof");
+    const popupSuccess = document.getElementById("popup-success");
 
-// Ambil elemen
-const buktiInput = document.getElementById("bukti-transfer");
-const sendProofBtn = document.getElementById("send-proof");
-const popupSuccess = document.getElementById("popup-success");
-const closeSuccess = document.getElementById("close-success");
+    sendProofBtn.addEventListener("click", async () => {
+        if (!buktiInput.files[0]) {
+            alert("Silahkan upload bukti pembayaran dulu");
+            return;
+        }
 
-// tombol kirim bukti
-sendProofBtn.addEventListener("click", async () => {
+        const file = buktiInput.files[0];
+        const storageRef = firebase.storage().ref("bukti/" + Date.now() + "_" + file.name);
+        await storageRef.put(file);
+        const url = await storageRef.getDownloadURL();
 
-    if (!buktiInput.files[0]) {
-        alert("Silahkan upload bukti pembayaran dulu");
-        return;
-    }
+        // Simpan di Firestore
+        await firebase.firestore().collection("buktiPembayaran").add({
+            url: url,
+            waktu: new Date()
+        });
 
-    // upload file ke Firebase Storage
-    const file = buktiInput.files[0];
-    const storageRef = firebase.storage().ref("bukti/" + Date.now() + "_" + file.name);
+        // Kirim ke backend
+        await fetch("/api/upload-bukti", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url })
+        });
 
-    await storageRef.put(file);
-
-    // ambil downloadable url
-    const url = await storageRef.getDownloadURL();
-
-    // simpan data ke Firestore agar admin bisa lihat
-    await firebase.firestore().collection("buktiPembayaran").add({
-        url: url,
-        waktu: new Date()
+        document.getElementById("popup-qris").style.display = "none";
+        popupSuccess.style.display = "flex";
     });
-
-    // Kirim link foto ke backend untuk dikirim ke Telegram
-await fetch("/api/upload-bukti", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ url })
-});
-
-// sukses
-document.getElementById("popup-qris").style.display = "none";
-popupSuccess.style.display = "flex";
-});
-
-// tombol close popup sukses
-closeSuccess.addEventListener("click", () => {
-    popupSuccess.style.display = "none";
 });
