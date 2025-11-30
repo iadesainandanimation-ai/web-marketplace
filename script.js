@@ -80,6 +80,12 @@ document.addEventListener("DOMContentLoaded", function() {
   });
 });
 document.addEventListener("DOMContentLoaded", () => {
+  
+  console.log("JS READY");
+console.log("buktiInput:", document.getElementById("bukti-transfer"));
+console.log("sendProofBtn:", document.getElementById("send-proof"));
+console.log("popupSuccess:", document.getElementById("popup-success"));
+  
     const buktiInput = document.getElementById("bukti-transfer");
     const sendProofBtn = document.getElementById("send-proof");
     const popupSuccess = document.getElementById("popup-success");
