@@ -132,12 +132,6 @@ const res = await fetch("/api/upload-bukti", {
 const result = await res.json();
 console.log(result);
 
-    // Ping API → kirim ke Telegram
-    await fetch("/api/upload-bukti", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url })
-    });
 
     // Tampilkan popup sukses
     qrisPopup.style.display = "none";
