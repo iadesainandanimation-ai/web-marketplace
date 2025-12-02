@@ -6,6 +6,7 @@ export const config = {
 
 import formidable from "formidable";
 import fs from "fs";
+import FormData from "form-data";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -29,22 +30,23 @@ export default async function handler(req, res) {
       const botToken = process.env.TELEGRAM_BOT_TOKEN;
       const chatId = process.env.TELEGRAM_CHAT_ID;
 
-      // Kirim gambar ke telegram
+      // Buat form-data untuk Telegram
+      const formData = new FormData();
+      formData.append("chat_id", chatId);
+      formData.append("caption", "Bukti Pembayaran Baru");
+      formData.append(
+        "photo",
+        fs.createReadStream(file.filepath),
+        file.originalFilename
+      );
+
+      // Kirim ke Telegram
       const telegramRes = await fetch(
         `https://api.telegram.org/bot${botToken}/sendPhoto`,
         {
           method: "POST",
-          body: (() => {
-            const formData = new FormData();
-            formData.append(
-              "photo",
-              fs.readFileSync(file.filepath),
-              file.originalFilename
-            );
-            formData.append("chat_id", chatId);
-            formData.append("caption", "Bukti Pembayaran Baru");
-            return formData;
-          })(),
+          body: formData,
+          headers: formData.getHeaders(),
         }
       );
 
