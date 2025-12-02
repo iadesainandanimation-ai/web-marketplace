@@ -1,6 +1,6 @@
 import formidable from "formidable";
 import fs from "fs";
-import FormData from "form-data";   // <-- WAJIB BANGET ADA INI
+import FormData from "form-data";
 
 export const config = {
   api: {
@@ -22,26 +22,35 @@ export default async function handler(req, res) {
     const chatId = process.env.TELEGRAM_CHAT_ID;
 
     const file = files.file;
+
     if (!file) {
       return res.status(400).json({ error: "File tidak ditemukan" });
     }
 
+    // ============================
+    // AMBIL FILE SEBAGAI BUFFER
+    // ============================
+    const fileBuffer = fs.readFileSync(file.filepath);
+
     const formData = new FormData();
     formData.append("chat_id", chatId);
     formData.append("caption", "Bukti Pembayaran Baru");
-    formData.append("photo", fs.createReadStream(file.filepath), file.originalFilename);
+    formData.append("photo", fileBuffer, {
+      filename: file.originalFilename,
+      contentType: file.mimetype
+    });
 
     const telegramRes = await fetch(
       `https://api.telegram.org/bot${botToken}/sendPhoto`,
       {
         method: "POST",
         body: formData,
-        headers: formData.getHeaders() // <-- WAJIB JUGA
+        headers: formData.getHeaders(),
       }
     );
 
     const data = await telegramRes.json();
-    console.log(data);
+    console.log("RESP TELEGRAM =>", data);
 
     return res.status(200).json({ success: true, telegram: data });
   } catch (error) {
