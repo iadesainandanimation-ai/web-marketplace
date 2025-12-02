@@ -1,5 +1,6 @@
 import formidable from "formidable";
 import fs from "fs";
+import FormData from "form-data";   // <-- WAJIB BANGET ADA INI
 
 export const config = {
   api: {
@@ -12,8 +13,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method tidak diizinkan" });
   }
 
-  const form = formidable({});
-  
+  const form = formidable({ multiples: false });
+
   try {
     const [fields, files] = await form.parse(req);
 
@@ -21,7 +22,10 @@ export default async function handler(req, res) {
     const chatId = process.env.TELEGRAM_CHAT_ID;
 
     const file = files.file;
-    
+    if (!file) {
+      return res.status(400).json({ error: "File tidak ditemukan" });
+    }
+
     const formData = new FormData();
     formData.append("chat_id", chatId);
     formData.append("caption", "Bukti Pembayaran Baru");
@@ -31,15 +35,17 @@ export default async function handler(req, res) {
       `https://api.telegram.org/bot${botToken}/sendPhoto`,
       {
         method: "POST",
-        body: formData
+        body: formData,
+        headers: formData.getHeaders() // <-- WAJIB JUGA
       }
     );
 
     const data = await telegramRes.json();
+    console.log(data);
 
     return res.status(200).json({ success: true, telegram: data });
   } catch (error) {
-    console.log("Error upload:", error);
+    console.log("Upload gagal:", error);
     return res.status(500).json({ error: "Upload gagal" });
   }
 }
