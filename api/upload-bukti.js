@@ -30,17 +30,15 @@ export default async function handler(req, res) {
       const botToken = process.env.TELEGRAM_BOT_TOKEN;
       const chatId = process.env.TELEGRAM_CHAT_ID;
 
-      // Buat form-data untuk Telegram
       const formData = new FormData();
-      formData.append("chat_id", chatId);
-      formData.append("caption", "Bukti Pembayaran Baru");
       formData.append(
         "photo",
         fs.createReadStream(file.filepath),
         file.originalFilename
       );
+      formData.append("chat_id", chatId);
+      formData.append("caption", "Bukti Pembayaran Baru");
 
-      // Kirim ke Telegram
       const telegramRes = await fetch(
         `https://api.telegram.org/bot${botToken}/sendPhoto`,
         {
@@ -51,7 +49,6 @@ export default async function handler(req, res) {
       );
 
       const data = await telegramRes.json();
-      console.log("Respon Telegram:", data);
 
       res.status(200).json({ success: true, telegram: data });
     } catch (error) {
