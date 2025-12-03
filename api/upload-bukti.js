@@ -1,6 +1,7 @@
 import formidable from "formidable";
 import fs from "fs";
-import { Blob } from "buffer";
+import path from "path";
+import FormData from "form-data";
 
 export const config = {
   api: {
@@ -13,16 +14,20 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method tidak diizinkan" });
   }
 
-  const form = formidable({
-    multiples: false,
-    uploadDir: "/tmp",
-    keepExtensions: true,
-    filename: (name, ext, part) => {
-      return `upload-${Date.now()}${ext}`;
-    },
-  });
-
   try {
+    // FOLDER UPLOAD FIX VERCEL
+    const uploadDir = "/tmp";
+
+    const form = formidable({
+      multiples: false,
+      uploadDir,
+      keepExtensions: true,
+      filename: (name, ext) => {
+        return "bukti-" + Date.now() + ext;
+      },
+    });
+
+    // FORMIDABLE PARSE METODE BARU (WAJIB DI V3)
     const { fields, files } = await new Promise((resolve, reject) => {
       form.parse(req, (err, fields, files) => {
         if (err) reject(err);
@@ -31,14 +36,13 @@ export default async function handler(req, res) {
     });
 
     const file = files.file;
+
     if (!file) {
       return res.status(400).json({ error: "File tidak ditemukan" });
     }
 
-    console.log("FILE MASUK =>", file);
-
-    const buffer = fs.readFileSync(file.filepath);
-    const blobFile = new Blob([buffer], { type: file.mimetype });
+    // BACA BUFFER
+    const fileBuffer = fs.readFileSync(file.filepath);
 
     // TELEGRAM
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
@@ -46,9 +50,13 @@ export default async function handler(req, res) {
 
     const formData = new FormData();
     formData.append("chat_id", chatId);
-    formData.append("caption", "📸 Bukti Pembayaran Baru Diterima");
-    formData.append("photo", blobFile, file.originalFilename || "bukti.jpg");
+    formData.append("caption", "📸 Bukti Pembayaran Baru Masuk");
+    formData.append("photo", fileBuffer, {
+      filename: file.originalFilename || "bukti.jpg",
+      contentType: file.mimetype,
+    });
 
+    // KIRIM
     const telegramRes = await fetch(
       `https://api.telegram.org/bot${botToken}/sendPhoto`,
       {
@@ -58,12 +66,16 @@ export default async function handler(req, res) {
     );
 
     const result = await telegramRes.json();
-    console.log("RESP TELEGRAM =>", result);
 
-    return res.status(200).json({ success: true, result });
-
+    return res.status(200).json({
+      success: true,
+      telegram: result,
+    });
   } catch (err) {
-    console.error("ERROR:", err);
-    return res.status(500).json({ error: "Upload gagal", detail: err });
+    console.error("ERROR UPLOAD:", err);
+    return res.status(500).json({
+      error: "Upload gagal",
+      detail: err.toString(),
+    });
   }
 }
