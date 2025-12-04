@@ -1,8 +1,7 @@
 import fs from "fs";
 import FormData from "form-data";
-// Menggunakan require() untuk kompatibilitas Formidable yang lebih baik 
-// di lingkungan serverless Vercel
-const formidable = require('formidable');
+// Mengambil kelas Formidable secara langsung dari modul
+const { Formidable } = require('formidable'); 
 
 export const config = {
   api: {
@@ -15,26 +14,22 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method tidak diizinkan" });
   }
 
-  // Variabel untuk menyimpan path file sementara
   let tempFilePath = null;
 
   try {
-    // FOLDER UPLOAD FIX VERCEL (selalu gunakan /tmp)
     const uploadDir = "/tmp";
 
-    const form = formidable({
+    // === PERBAIKAN: Instansiasi Formidable v3 menggunakan 'new Formidable' ===
+    const form = new Formidable({ 
       multiples: false,
       uploadDir,
       keepExtensions: true,
       filename: (name, ext) => {
-        // Nama file sementara yang disimpan di /tmp
         return "bukti-" + Date.now() + ext;
       },
-      // Batasi ukuran file
       maxFileSize: 5 * 1024 * 1024, // 5MB
     });
 
-    // PARSE METODE BARU (WAJIB DI V3)
     const { fields, files } = await new Promise((resolve, reject) => {
       form.parse(req, (err, fields, files) => {
         if (err) reject(err);
@@ -42,19 +37,17 @@ export default async function handler(req, res) {
       });
     });
 
-    // === PERBAIKAN 1: Mengambil objek file yang benar dari hasil parse (Array [0]) ===
     const fileData = files.file;
-    const file = Array.isArray(fileData) ? fileData[0] : fileData;
+    // Mengambil objek file pertama, karena 'multiples: false'
+    const file = Array.isArray(fileData) ? fileData[0] : fileData; 
 
     if (!file || !file.filepath) {
       return res.status(400).json({ error: "File bukti pembayaran tidak ditemukan atau path tidak valid." });
     }
     
-    // Simpan path sementara untuk penghapusan di blok finally
     tempFilePath = file.filepath;
 
-    // BACA BUFFER DARI TEMPORARY PATH
-    const fileBuffer = fs.readFileSync(file.filepath); // Baris ini sekarang seharusnya berfungsi
+    const fileBuffer = fs.readFileSync(file.filepath); 
 
     // --- LOGIKA TELEGRAM ---
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
@@ -68,7 +61,6 @@ export default async function handler(req, res) {
       contentType: file.mimetype,
     });
 
-    // KIRIM KE TELEGRAM
     const telegramRes = await fetch(
       `https://api.telegram.org/bot${botToken}/sendPhoto`,
       {
@@ -80,10 +72,7 @@ export default async function handler(req, res) {
     const result = await telegramRes.json();
 
     if (!result.ok) {
-        // Jika Telegram gagal mengirim
         console.error("Gagal kirim ke Telegram:", result);
-        // Lanjutkan return success agar di frontend dianggap berhasil, 
-        // namun catat error di log server
     }
 
     // --- RESPON SUKSES ---
@@ -96,9 +85,9 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error("ERROR UPLOAD FINAL:", err);
     
-    // --- PENANGANAN ERROR ---
     let errorMessage = "Upload gagal";
-    if (err.code === 'ERR_MAX_FILE_SIZE') {
+    // Formidable v3 menggunakan properti 'code' untuk error seperti ukuran
+    if (err.code === 'LIMIT_FILE_SIZE') { 
         errorMessage = "Ukuran file terlalu besar. Maksimal 5MB.";
     }
 
@@ -108,7 +97,7 @@ export default async function handler(req, res) {
     });
 
   } finally {
-    // === PERBAIKAN 2: Pastikan file sementara dihapus setelah proses selesai ===
+    // Pastikan file sementara dihapus
     if (tempFilePath && fs.existsSync(tempFilePath)) {
         try {
             fs.unlinkSync(tempFilePath);
