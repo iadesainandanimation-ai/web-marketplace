@@ -1,6 +1,5 @@
 import fs from "fs";
 import FormData from "form-data";
-// Mengambil kelas Formidable secara langsung dari modul
 const { Formidable } = require('formidable'); 
 
 export const config = {
@@ -19,7 +18,6 @@ export default async function handler(req, res) {
   try {
     const uploadDir = "/tmp";
 
-    // === PERBAIKAN: Instansiasi Formidable v3 menggunakan 'new Formidable' ===
     const form = new Formidable({ 
       multiples: false,
       uploadDir,
@@ -38,7 +36,6 @@ export default async function handler(req, res) {
     });
 
     const fileData = files.file;
-    // Mengambil objek file pertama, karena 'multiples: false'
     const file = Array.isArray(fileData) ? fileData[0] : fileData; 
 
     if (!file || !file.filepath) {
@@ -56,22 +53,29 @@ export default async function handler(req, res) {
     const formData = new FormData();
     formData.append("chat_id", chatId);
     formData.append("caption", "📸 Bukti Pembayaran Baru Masuk (via Web)");
-    formData.append("photo", fileBuffer, {
+    formData.append("photo", fileBuffer, { // Field name harus 'photo'
       filename: file.originalFilename || "bukti.jpg",
       contentType: file.mimetype,
     });
+    
+    // === PERBAIKAN: Menambahkan headers yang dibuat oleh FormData ===
+    const headers = formData.getHeaders();
 
+    // KIRIM KE TELEGRAM
     const telegramRes = await fetch(
       `https://api.telegram.org/bot${botToken}/sendPhoto`,
       {
         method: "POST",
-        body: formData,
+        // WAJIB: masukkan headers yang mengandung Content-Type multipart/form-data dengan boundary
+        headers: headers, 
+        body: formData, // formData harus dilewatkan sebagai body
       }
     );
 
     const result = await telegramRes.json();
 
     if (!result.ok) {
+        // Log error di server, tapi kembalikan 200 ke user karena file sudah terupload
         console.error("Gagal kirim ke Telegram:", result);
     }
 
@@ -86,7 +90,6 @@ export default async function handler(req, res) {
     console.error("ERROR UPLOAD FINAL:", err);
     
     let errorMessage = "Upload gagal";
-    // Formidable v3 menggunakan properti 'code' untuk error seperti ukuran
     if (err.code === 'LIMIT_FILE_SIZE') { 
         errorMessage = "Ukuran file terlalu besar. Maksimal 5MB.";
     }
@@ -97,7 +100,6 @@ export default async function handler(req, res) {
     });
 
   } finally {
-    // Pastikan file sementara dihapus
     if (tempFilePath && fs.existsSync(tempFilePath)) {
         try {
             fs.unlinkSync(tempFilePath);
@@ -107,4 +109,4 @@ export default async function handler(req, res) {
         }
     }
   }
-}
+  }
