@@ -44,7 +44,10 @@ export default async function handler(req, res) {
     
     tempFilePath = file.filepath;
 
-    const fileBuffer = fs.readFileSync(file.filepath); 
+    // === PENTING: Ganti readFileSync dengan createReadStream ===
+    // Ini lebih efisien dan cenderung memperbaiki masalah encoding FormData/Telegram
+    const fileStream = fs.createReadStream(file.filepath); 
+    // ==========================================================
 
     // --- LOGIKA TELEGRAM ---
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
@@ -53,29 +56,25 @@ export default async function handler(req, res) {
     const formData = new FormData();
     formData.append("chat_id", chatId);
     formData.append("caption", "📸 Bukti Pembayaran Baru Masuk (via Web)");
-    formData.append("photo", fileBuffer, { // Field name harus 'photo'
+    
+    // === PENTING: Menggunakan Stream sebagai body 'photo' ===
+    formData.append("photo", fileStream, {
       filename: file.originalFilename || "bukti.jpg",
       contentType: file.mimetype,
     });
-    
-    // === PERBAIKAN: Menambahkan headers yang dibuat oleh FormData ===
-    const headers = formData.getHeaders();
+    // ======================================================
 
-    // KIRIM KE TELEGRAM
     const telegramRes = await fetch(
       `https://api.telegram.org/bot${botToken}/sendPhoto`,
       {
         method: "POST",
-        // WAJIB: masukkan headers yang mengandung Content-Type multipart/form-data dengan boundary
-        headers: headers, 
-        body: formData, // formData harus dilewatkan sebagai body
+        body: formData, // Biarkan fetch yang mengatur Content-Type secara otomatis
       }
     );
 
     const result = await telegramRes.json();
 
     if (!result.ok) {
-        // Log error di server, tapi kembalikan 200 ke user karena file sudah terupload
         console.error("Gagal kirim ke Telegram:", result);
     }
 
@@ -109,4 +108,5 @@ export default async function handler(req, res) {
         }
     }
   }
-  }
+      }
+      
