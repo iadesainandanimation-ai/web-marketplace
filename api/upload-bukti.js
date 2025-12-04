@@ -1,4 +1,5 @@
-import fs from 'fs';
+import fs from 'fs/promises'; // Menggunakan API promises untuk operasi I/O asinkron
+import * as fsSync from 'fs'; // Tetap butuh fs sinkron untuk existsSync di finally
 import { IncomingForm } from 'formidable';
 import FormData from 'form-data';
 
@@ -16,10 +17,13 @@ export default async function handler(req, res) {
   }
 
   const form = new IncomingForm({
-    uploadDir: './tmp',
+    uploadDir: '/tmp', // Wajib menggunakan /tmp di lingkungan serverless Vercel
     keepExtensions: true,
     maxFileSize: 5 * 1024 * 1024, // Maks 5MB
   });
+
+  // Deklarasikan 'file' di scope terluar agar dapat diakses oleh blok 'finally'
+  let file; 
 
   try {
     const { fields, files } = await new Promise((resolve, reject) => {
@@ -29,10 +33,11 @@ export default async function handler(req, res) {
       });
     });
 
-    const file = files.bukti_pembayaran?.[0] || Object.values(files)[0];
+    // Ambil file yang pertama ditemukan
+    file = files.bukti_pembayaran?.[0] || Object.values(files)[0];
     
-    if (!file) {
-      console.error('File tidak ditemukan dalam request.');
+    if (!file || !file.filepath) {
+      console.error('File atau filepath tidak ditemukan dalam request.');
       return res.status(400).json({ success: false, message: 'File tidak ditemukan.' });
     }
 
@@ -41,7 +46,6 @@ export default async function handler(req, res) {
     
     if (!botToken || !chatId) {
         console.error('Token atau Chat ID Telegram tidak terdeteksi di ENV.');
-        // Beri respons 500 karena ini masalah konfigurasi server
         return res.status(500).json({ success: false, message: 'Server error: Konfigurasi Telegram hilang.' });
     }
 
@@ -50,36 +54,26 @@ export default async function handler(req, res) {
     formData.append("chat_id", chatId);
     formData.append("caption", "📸 Bukti Pembayaran Baru Masuk (via Web)");
 
-    // 2. Tambahkan file sebagai Stream
-    const fileStream = fs.createReadStream(file.filepath); 
+    // 2. Baca seluruh file ke dalam Buffer (Operasi I/O yang lebih cepat dan aman dari timeout)
+    const fileBuffer = await fs.readFile(file.filepath); 
 
-    formData.append("photo", fileStream, {
+    // 3. Tambahkan Buffer ke FormData
+    formData.append("photo", fileBuffer, {
       filename: file.originalFilename || "bukti.jpg",
       contentType: file.mimetype,
     });
     
-    // 3. Ambil Content-Type headers (dengan boundary)
+    // 4. Ambil Content-Type headers (dengan boundary)
+    // Content-Length tidak diperlukan karena dikirim sebagai Buffer
     const formHeaders = formData.getHeaders();
     
-    // 4. Ambil Content-Length secara asinkron (KRUSIAL)
-    const contentLength = await new Promise((resolve, reject) => {
-        formData.getLength((err, length) => {
-            if (err) reject(err);
-            resolve(length);
-        });
-    });
-    
-    // 5. Lakukan Fetch ke API Telegram dengan headers yang dikalkulasi
+    // 5. Lakukan Fetch ke API Telegram
     const telegramRes = await fetch(
       `https://api.telegram.org/bot${botToken}/sendPhoto`,
       {
         method: "POST",
         body: formData,
-        // Gabungkan semua headers (terutama Content-Type dan Content-Length)
-        headers: {
-            ...formHeaders,
-            'Content-Length': contentLength,
-        }
+        headers: formHeaders // Hanya Content-Type yang diperlukan
       }
     );
 
@@ -90,10 +84,6 @@ export default async function handler(req, res) {
         console.log("Berhasil kirim ke Telegram:", result);
     } else {
         console.error("Gagal kirim ke Telegram:", result);
-        // Tetap kembalikan respons 200 ke klien jika ini adalah kegagalan Telegram (Bad Request),
-        // namun log error-nya secara detail di sisi server.
-        // Anda bisa memilih status 500 di sini jika ingin klien tahu ada masalah serius.
-        // Untuk saat ini, kita anggap pengunggahan ke server sukses.
     }
 
     res.status(200).json({ 
@@ -104,12 +94,13 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Error saat memproses upload:', error);
+    // Kembalikan error 500 ke klien
     res.status(500).json({ success: false, message: 'Terjadi kesalahan pada server saat memproses file.', error: error.message });
   } finally {
-    // Pastikan file sementara dihapus di akhir
-    if (file && fs.existsSync(file.filepath)) {
+    // Bagian ini sekarang menggunakan fs/promises.unlink
+    if (file && file.filepath && fsSync.existsSync(file.filepath)) {
       try {
-        fs.unlinkSync(file.filepath);
+        await fs.unlink(file.filepath); // Gunakan fs/promises.unlink (await)
         console.log(`File sementara dihapus: ${file.filepath}`);
       } catch (e) {
         console.error("Gagal menghapus file sementara:", e);
