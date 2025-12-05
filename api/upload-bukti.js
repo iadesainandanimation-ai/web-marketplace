@@ -33,8 +33,9 @@ export default async function handler(req, res) {
       });
     });
 
-    // Ambil file yang pertama ditemukan
-    file = files.bukti_pembayaran?.[0] || Object.values(files)[0];
+    // START PERUBAHAN UTAMA: Menggunakan kunci 'file' sesuai dengan input name di HTML
+    file = files.file?.[0] || Object.values(files)[0];
+    // END PERUBAHAN UTAMA
     
     if (!file || !file.filepath) {
       console.error('File atau filepath tidak ditemukan dalam request.');
@@ -64,7 +65,6 @@ export default async function handler(req, res) {
     });
     
     // 4. Ambil Content-Type headers (dengan boundary)
-    // Content-Length tidak diperlukan karena dikirim sebagai Buffer
     const formHeaders = formData.getHeaders();
     
     // 5. Lakukan Fetch ke API Telegram
@@ -107,4 +107,4 @@ export default async function handler(req, res) {
       }
     }
   }
-}
+      }
