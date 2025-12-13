@@ -1,12 +1,13 @@
-import fs from 'fs/promises'; // Menggunakan API promises untuk operasi I/O asinkron
-import * as fsSync from 'fs'; // Tetap butuh fs sinkron untuk existsSync di finally
+import fs from 'fs/promises';
+import * as fsSync from 'fs';
 import { IncomingForm } from 'formidable';
 import FormData from 'form-data';
+import axios from 'axios'; // <-- IMPORT AXIOS
 
 // Konfigurasi agar Vercel tahu ini adalah API endpoint kustom
 export const config = {
   api: {
-    bodyParser: false, // Penting: nonaktifkan body parser default untuk menangani form data
+    bodyParser: false,
   },
 };
 
@@ -17,12 +18,11 @@ export default async function handler(req, res) {
   }
 
   const form = new IncomingForm({
-    uploadDir: '/tmp', // Wajib menggunakan /tmp di lingkungan serverless Vercel
+    uploadDir: '/tmp',
     keepExtensions: true,
-    maxFileSize: 5 * 1024 * 1024, // Maks 5MB
+    maxFileSize: 5 * 1024 * 1024,
   });
 
-  // Deklarasikan 'file' di scope terluar agar dapat diakses oleh blok 'finally'
   let file; 
 
   try {
@@ -33,9 +33,8 @@ export default async function handler(req, res) {
       });
     });
 
-    // START PERUBAHAN UTAMA: Menggunakan kunci 'file' sesuai dengan input name di HTML
+    // 1. Perbaikan Kunci File (Sesuai dengan frontend)
     file = files.file?.[0] || Object.values(files)[0];
-    // END PERUBAHAN UTAMA
     
     if (!file || !file.filepath) {
       console.error('File atau filepath tidak ditemukan dalam request.');
@@ -50,34 +49,32 @@ export default async function handler(req, res) {
         return res.status(500).json({ success: false, message: 'Server error: Konfigurasi Telegram hilang.' });
     }
 
-    // 1. Buat objek FormData baru
+    // 2. Persiapan Data
     const formData = new FormData();
     formData.append("chat_id", chatId);
     formData.append("caption", "📸 Bukti Pembayaran Baru Masuk (via Web)");
 
-    // 2. Baca seluruh file ke dalam Buffer (Operasi I/O yang lebih cepat dan aman dari timeout)
     const fileBuffer = await fs.readFile(file.filepath); 
 
-    // 3. Tambahkan Buffer ke FormData
     formData.append("photo", fileBuffer, {
       filename: file.originalFilename || "bukti.jpg",
       contentType: file.mimetype,
     });
     
-    // 4. Ambil Content-Type headers (dengan boundary)
-    const formHeaders = formData.getHeaders();
-    
-    // 5. Lakukan Fetch ke API Telegram
-    const telegramRes = await fetch(
-      `https://api.telegram.org/bot${botToken}/sendPhoto`,
+    // 3. Request Menggunakan AXIOS
+    const TELEGRAM_API_URL = `https://api.telegram.org/bot${botToken}/sendPhoto`;
+
+    const telegramAxiosRes = await axios.post(
+      TELEGRAM_API_URL,
+      formData,
       {
-        method: "POST",
-        body: formData,
-        headers: formHeaders // Hanya Content-Type yang diperlukan
+        // PENTING: Axios secara otomatis menangani headers/body streaming lebih baik
+        headers: formData.getHeaders(), 
       }
     );
 
-    const result = await telegramRes.json();
+    // Axios secara otomatis mengembalikan data JSON yang sudah diparse
+    const result = telegramAxiosRes.data; 
     
     // Cek respons dari Telegram
     if (result.ok) {
@@ -93,18 +90,27 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
+    // Penanganan Error yang lebih baik dari Axios
+    let errorMessage = 'Terjadi kesalahan pada server saat memproses file.';
+    if (error.response) {
+      // Error dari Telegram (400, 401, dll.)
+      errorMessage = `Telegram API Error: Status ${error.response.status}. Pesan: ${JSON.stringify(error.response.data)}`;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
     console.error('Error saat memproses upload:', error);
-    // Kembalikan error 500 ke klien
-    res.status(500).json({ success: false, message: 'Terjadi kesalahan pada server saat memproses file.', error: error.message });
+    res.status(500).json({ success: false, message: errorMessage, error: errorMessage });
+    
   } finally {
-    // Bagian ini sekarang menggunakan fs/promises.unlink
     if (file && file.filepath && fsSync.existsSync(file.filepath)) {
       try {
-        await fs.unlink(file.filepath); // Gunakan fs/promises.unlink (await)
+        await fs.unlink(file.filepath);
         console.log(`File sementara dihapus: ${file.filepath}`);
       } catch (e) {
         console.error("Gagal menghapus file sementara:", e);
       }
     }
   }
-      }
+}
+
