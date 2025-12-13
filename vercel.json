@@ -10,5 +10,8 @@
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1.js" },
     { "src": "/(.*)", "dest": "/$1" }
-  ]
+  ],
+  // Tambahkan bagian ini untuk Build Command
+  "installCommand": "npm install"
 }
+
