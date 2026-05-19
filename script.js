@@ -1,3 +1,14 @@
+const generateRefID = () => {
+    const now = new Date();
+    const year = now.getFullYear().toString().slice(-2);
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const date = String(now.getDate()).padStart(2, '0');
+    const dateStr = `${year}${month}${date}`;
+    
+    const randomNum = Math.floor(1000 + Math.random() * 9000); 
+    return `PPOB-${dateStr}-${randomNum}`;
+};
+
 // ======================
 // AMBIL DATA PRODUK
 // ======================
@@ -83,6 +94,26 @@ document.addEventListener("DOMContentLoaded", () => {
     const product = document.getElementById("product-name").value;
     const note = document.getElementById("buyer-note").value;
 
+    // 1. Bikin Ref-ID nya dulu sebelum kirim data pesanan
+const currentRefID = generateRefID();
+
+// 2. Ini fetch punyamu di baris 87 (pastikan URL-nya sesuai kodingan aslimu ya)
+const res = await fetch("/api/kirim-pesanan", { 
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    // Masukkan currentRefID ke dalam body biar kesimpan di database kamu
+    body: JSON.stringify({ 
+        ref_id: currentRefID, // <-- TAMBAHKAN INI
+        name, 
+        phone, 
+        product, 
+        note,
+        status: "Pending" // <-- Tambahkan juga status awal pesanan
+    })
+});
+
+const result = await res.json();
+    
     const res = await fetch("/api/order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
