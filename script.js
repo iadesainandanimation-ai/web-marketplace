@@ -112,6 +112,17 @@ const res = await fetch("/api/kirim-pesanan", {
     })
 });
 
+      // Pastikan logika pengecekan sukses ini ada ya biar pop-up nya muncul:
+    if (!result.success) {
+        alert("Gagal mengirim pesanan: " + result.error);
+        return;
+    }
+
+      // Sembunyikan form input, lalu munculkan pop-up QRIS
+    popup.style.display = "none";
+    qrisPopup.style.display = "flex";
+  }); // <-- Penutup form submit
+    
 const result = await res.json();
     
     const res = await fetch("/api/order", {
