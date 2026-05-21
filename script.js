@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-  // ======================
+    // ======================
   // SUBMIT FORM (ISI DATA)
   // ======================
   form.addEventListener("submit", async (e) => {
@@ -94,50 +94,32 @@ document.addEventListener("DOMContentLoaded", () => {
     const product = document.getElementById("product-name").value;
     const note = document.getElementById("buyer-note").value;
 
-    // 1. Bikin Ref-ID nya dulu sebelum kirim data pesanan
-const currentRefID = generateRefID();
+    // 1. Bikin Ref-ID unik otomatis
+    const currentRefID = generateRefID();
 
-// 2. Ini fetch punyamu di baris 87 (pastikan URL-nya sesuai kodingan aslimu ya)
-const res = await fetch("/api/kirim-pesanan", { 
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    // Masukkan currentRefID ke dalam body biar kesimpan di database kamu
-    body: JSON.stringify({ 
-        ref_id: currentRefID, // <-- TAMBAHKAN INI
+    // 2. Kirim data ke backend asli kamu (/api/order)
+    const res = await fetch("/api/order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        ref_id: currentRefID, // <-- Sudah masuk database
         name, 
         phone, 
         product, 
         note,
-        status: "Pending" // <-- Tambahkan juga status awal pesanan
-    })
-});
-
-      // Pastikan logika pengecekan sukses ini ada ya biar pop-up nya muncul:
-    if (!result.success) {
-        alert("Gagal mengirim pesanan: " + result.error);
-        return;
-    }
-
-      // Sembunyikan form input, lalu munculkan pop-up QRIS
-    popup.style.display = "none";
-    qrisPopup.style.display = "flex";
-  }); // <-- Penutup form submit
-    
-const result = await res.json();
-    
-    const res = await fetch("/api/order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, phone, product, note })
+        status: "Pending"     // <-- Status awal transaksi
+      })
     });
 
     const result = await res.json();
 
+    // 3. Cek apakah pengiriman data sukses
     if (!result.success) {
       alert("Gagal mengirim pesanan: " + result.error);
       return;
     }
 
+    // 4. Sembunyikan form input, lalu munculkan pop-up QRIS
     popup.style.display = "none";
     qrisPopup.style.display = "flex";
   });
