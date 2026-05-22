@@ -11,10 +11,12 @@ const db = admin.firestore();
 export default async function handler(req, res) {
   if (req.method === "POST") {
     try {
-      const { name, phone, product, note } = req.body;
+      // 1. Tangkap ref_id dari req.body yang dikirim frontend
+      const { ref_id, name, phone, product, note } = req.body;
 
-      // Simpan ke Firestore
+      // 2. Simpan ke Firestore (Tambahkan ref_id ke dalam object)
       await db.collection("orders").add({
+        ref_id: ref_id || "TANPA-REF-ID", // Jaga-jaga kalau frontend gak ngirim
         name,
         phone,
         product,
@@ -24,15 +26,19 @@ export default async function handler(req, res) {
         dibuat: admin.firestore.FieldValue.serverTimestamp(),
       });
 
-      // ===== Kirim ke Telegram =====
+      // ===== 3. Kirim ke Telegram (Kita bikin makin rapi pake Ref-ID) =====
       const message = `
-🛒 *Order Baru Masuk*
-Nama: ${name}
-No HP: ${phone}
-Produk: ${product}
-Catatan: ${note || "-"}
-Tanggal: ${new Date().toLocaleString("id-ID")}
-      `;
+✨ *ORDER BARU MASUK* ✨
+-----------------------------
+🆔 *Ref-ID:* \`${ref_id}\`
+👤 *Nama:* ${name}
+📱 *No HP:* ${phone}
+📦 *Produk:* ${product}
+📝 *Catatan:* ${note || "-"}
+📅 *Tanggal:* ${new Date().toLocaleString("id-ID")}
+🚦 *Status:* PENDING
+-----------------------------
+`;
 
       await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
         method: "POST",
