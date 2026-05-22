@@ -132,7 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
       
       // Jalankan aksi kirim pesan saat tombol diklik
       newBtn.addEventListener("click", () => {
-        const nomorAdmin = "6281234567890"; // <-- GANTI NOMOR WA KAMU DI SINI (Format 62)
+        const nomorAdmin = "62895700985606"; // <-- GANTI NOMOR WA KAMU DI SINI (Format 62)
         const teksPesan = `Halo Admin, saya sudah melakukan pembayaran.%0A%0A` +
                           `🆔 *Ref-ID:* ${currentRefID}%0A` +
                           `📦 *Produk:* ${product}%0A%0A` +
