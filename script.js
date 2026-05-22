@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-    // ======================
+  // ======================
   // SUBMIT FORM (ISI DATA)
   // ======================
   form.addEventListener("submit", async (e) => {
@@ -102,12 +102,12 @@ document.addEventListener("DOMContentLoaded", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ 
-        ref_id: currentRefID, // <-- Sudah masuk database
+        ref_id: currentRefID, 
         name, 
         phone, 
         product, 
         note,
-        status: "Pending"     // <-- Status awal transaksi
+        status: "Pending"     
       })
     });
 
@@ -122,45 +122,27 @@ document.addEventListener("DOMContentLoaded", () => {
     // 4. Sembunyikan form input, lalu munculkan pop-up QRIS
     popup.style.display = "none";
     qrisPopup.style.display = "flex";
-  });
 
+    // 5. SAKLAR TOMBOL WHATSAPP (Langsung aktif di sini)
+    const btnWaConfirm = document.getElementById("btn-wa-confirm");
+    if (btnWaConfirm) {
+      // Reset listener biar gak dobel pas pembeli nge-klik berulang kali
+      const newBtn = btnWaConfirm.cloneNode(true);
+      btnWaConfirm.parentNode.replaceChild(newBtn, btnWaConfirm);
+      
+      // Jalankan aksi kirim pesan saat tombol diklik
+      newBtn.addEventListener("click", () => {
+        const nomorAdmin = "6281234567890"; // <-- GANTI NOMOR WA KAMU DI SINI (Format 62)
+        const teksPesan = `Halo Admin, saya sudah melakukan pembayaran.%0A%0A` +
+                          `🆔 *Ref-ID:* ${currentRefID}%0A` +
+                          `📦 *Produk:* ${product}%0A%0A` +
+                          `Berikut saya lampirkan bukti transfernya ya min.`;
 
-
-  // ======================
-  // UPLOAD BUKTI BAYAR
-  // ======================
-  sendProofBtn.addEventListener("click", async () => {
-
-    console.log("Tombol KIRIM BUKTI diklik");
-
-    // Cek file
-    if (!buktiInput.files[0]) {
-      alert("Silahkan upload bukti pembayaran dulu");
-      return;
+        window.open(`https://wa.me/${nomorAdmin}?text=${teksPesan}`, '_blank');
+        
+        // Setelah dialihkan ke WA, otomatis web pindah ke popup sukses/terima kasih
+        qrisPopup.style.display = "none";
+        popupSuccess.style.display = "flex";
+      });
     }
-
-    const file = buktiInput.files[0];
-    const fileName = Date.now() + "_" + file.name;
-
-    console.log("Mulai upload:", fileName);
-
-    // Kirim file langsung ke API Vercel
-const formData = new FormData();
-formData.append("file", file);
-
-const res = await fetch("/api/upload-bukti", {
-  method: "POST",
-  body: formData,
-});
-
-const result = await res.json();
-console.log(result);
-
-
-    // Tampilkan popup sukses
-    qrisPopup.style.display = "none";
-    popupSuccess.style.display = "flex";
-
-  });
-
-});
+  }); // <-- Penutup form submit yang bersih total
