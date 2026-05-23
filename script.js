@@ -16,6 +16,8 @@ fetch("/api/mockapi")
   .then(res => res.json())
   .then(data => {
     const container = document.querySelector("#product-list");
+    if (!container) return;
+    
     container.innerHTML = "";
 
     data.forEach(item => {
@@ -35,8 +37,10 @@ fetch("/api/mockapi")
   })
   .catch(err => {
     console.error("Gagal memuat data:", err);
-    document.querySelector("#product-list").innerHTML =
-      "<p style='color:red;'>Gagal memuat data produk.</p>";
+    const container = document.querySelector("#product-list");
+    if (container) {
+      container.innerHTML = "<p style='color:red;'>Gagal memuat data produk.</p>";
+    }
   });
 
 
@@ -44,10 +48,14 @@ fetch("/api/mockapi")
 // FORM BELI
 // ======================
 function openPurchaseForm(item) {
-  document.getElementById("product-name").value = item.Name;
-  document.getElementById("popup").style.display = "flex";
+  const productNameInput = document.getElementById("product-name");
+  const popup = document.getElementById("popup");
+  
+  if (productNameInput && popup) {
+    productNameInput.value = item.Name;
+    popup.style.display = "flex";
+  }
 }
-
 
 
 // ========================
@@ -61,88 +69,88 @@ document.addEventListener("DOMContentLoaded", () => {
   const popup = document.getElementById("popup");
   const qrisPopup = document.getElementById("popup-qris");
   const popupSuccess = document.getElementById("popup-success");
+  const form = document.getElementById("orderForm"); // 🟢 Disamakan dengan ID di HTML kamu!
 
-  const form = document.querySelector("#popup form");
-  const buktiInput = document.getElementById("bukti-transfer");
-  const sendProofBtn = document.getElementById("send-proof");
-
-  // Close buttons
-  document.getElementById("close-popup").addEventListener("click", () => {
-    popup.style.display = "none";
+  // Amankan jika close button dicari
+  document.getElementById("close-popup")?.addEventListener("click", () => {
+    if (popup) popup.style.display = "none";
   });
 
-  document.getElementById("close-qris").addEventListener("click", () => {
-    qrisPopup.style.display = "none";
+  document.getElementById("close-qris")?.addEventListener("click", () => {
+    if (qrisPopup) qrisPopup.style.display = "none";
   });
 
-  document.getElementById("close-success").addEventListener("click", () => {
-    popupSuccess.style.display = "none";
+  document.getElementById("close-success")?.addEventListener("click", () => {
+    if (popupSuccess) popupSuccess.style.display = "none";
   });
-
 
 
   // ======================
   // SUBMIT FORM (ISI DATA)
   // ======================
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-    console.log("Form pembelian disubmit!");
+      console.log("Form pembelian disubmit!");
 
-    const name = document.getElementById("buyer-name").value;
-    const phone = document.getElementById("buyer-phone").value;
-    const product = document.getElementById("product-name").value;
-    const note = document.getElementById("buyer-note").value;
+      const name = document.getElementById("buyer-name").value;
+      const phone = document.getElementById("buyer-phone").value;
+      const product = document.getElementById("product-name").value;
+      const note = document.getElementById("buyer-note").value;
 
-    // 1. Bikin Ref-ID unik otomatis
-    const currentRefID = generateRefID();
+      // 1. Bikin Ref-ID unik otomatis
+      const currentRefID = generateRefID();
 
-    // 2. Kirim data ke backend asli kamu (/api/order)
-    const res = await fetch("/api/order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        ref_id: currentRefID, 
-        name, 
-        phone, 
-        product, 
-        note,
-        status: "Pending"     
-      })
-    });
-
-    const result = await res.json();
-
-    // 3. Cek apakah pengiriman data sukses
-    if (!result.success) {
-      alert("Gagal mengirim pesanan: " + result.error);
-      return;
-    }
-
-    // 4. Sembunyikan form input, lalu munculkan pop-up QRIS
-    popup.style.display = "none";
-    qrisPopup.style.display = "flex";
-
-    // 5. SAKLAR TOMBOL WHATSAPP (Langsung aktif di sini)
-    const btnWaConfirm = document.getElementById("btn-wa-confirm");
-    if (btnWaConfirm) {
-      // Reset listener biar gak dobel pas pembeli nge-klik berulang kali
-      const newBtn = btnWaConfirm.cloneNode(true);
-      btnWaConfirm.parentNode.replaceChild(newBtn, btnWaConfirm);
-      
-      // Jalankan aksi kirim pesan saat tombol diklik
-      newBtn.addEventListener("click", () => {
-        const nomorAdmin = "62895700985606"; // <-- GANTI NOMOR WA KAMU DI SINI (Format 62)
-        const teksPesan = `Halo Admin, saya sudah melakukan pembayaran.%0A%0A` +
-                          `🆔 *Ref-ID:* ${currentRefID}%0A` +
-                          `📦 *Produk:* ${product}%0A%0A` +
-                          `Berikut saya lampirkan bukti transfernya ya min.`;
-
-        window.open(`https://wa.me/${nomorAdmin}?text=${teksPesan}`, '_blank');
-        
-        // Setelah dialihkan ke WA, otomatis web pindah ke popup sukses/terima kasih
-        qrisPopup.style.display = "none";
-        popupSuccess.style.display = "flex";
+      // 2. Kirim data ke backend asli kamu (/api/order)
+      const res = await fetch("/api/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          ref_id: currentRefID, 
+          name, 
+          phone, 
+          product, 
+          note,
+          status: "Pending"     
+        })
       });
-    }
-  }); // <-- Penutup form submit yang bersih total
+
+      const result = await res.json();
+
+      // 3. Cek apakah pengiriman data sukses
+      if (!result.success) {
+        alert("Gagal mengirim pesanan: " + result.error);
+        return;
+      }
+
+      // 4. Sembunyikan form input, lalu munculkan pop-up QRIS
+      if (popup) popup.style.display = "none";
+      if (qrisPopup) qrisPopup.style.display = "flex";
+
+      // 5. SAKLAR TOMBOL WHATSAPP (Langsung aktif di sini)
+      const btnWaConfirm = document.getElementById("btn-wa-confirm");
+      if (btnWaConfirm) {
+        // Reset listener biar gak dobel pas pembeli nge-klik berulang kali
+        const newBtn = btnWaConfirm.cloneNode(true);
+        btnWaConfirm.parentNode.replaceChild(newBtn, btnWaConfirm);
+        
+        // Jalankan aksi kirim pesan saat tombol diklik
+        newBtn.addEventListener("click", () => {
+          const nomorAdmin = "62895700985606"; // Nomor WA kamu aman
+          const teksPesan = `Halo Admin, saya sudah melakukan pembayaran.%0A%0A` +
+                            `🆔 *Ref-ID:* ${currentRefID}%0A` +
+                            `📦 *Produk:* ${product}%0A%0A` +
+                            `Berikut saya lampirkan bukti transfernya ya min.`;
+
+          window.open(`https://wa.me/${nomorAdmin}?text=${teksPesan}`, '_blank');
+          
+          // Setelah dialihkan ke WA, otomatis web pindah ke popup sukses/terima kasih
+          if (qrisPopup) qrisPopup.style.display = "none";
+          if (popupSuccess) popupSuccess.style.display = "flex";
+        });
+      }
+    });
+  }
+});
+            
